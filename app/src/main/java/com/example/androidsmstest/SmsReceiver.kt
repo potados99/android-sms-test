@@ -7,37 +7,43 @@ import android.net.Uri
 import android.provider.Telephony
 import android.widget.Toast
 import android.content.ContentValues
+import android.telephony.SmsMessage
 
 
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent == null) {
-            println("SmsReceiver.onReceive")
-            println("context = [$context], intent = [$intent]")
-            println("intent is null")
+        val actionToRespond = Telephony.Sms.Intents.SMS_DELIVER_ACTION
 
-            return // Do not throw!
-        }
-
-        if (intent.action == Telephony.Sms.Intents.SMS_DELIVER_ACTION) {
+        if (intent?.action == actionToRespond) {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
 
-            for(smsMessage in messages) {
-                val messageBody: String = smsMessage.messageBody
-
-                if (messageBody.startsWith("LS")) {
-                    val payload = messageBody.removePrefix("LS")
-                    Toast.makeText(context, payload, Toast.LENGTH_SHORT).show()
-                }
-                else {
-                    val values = ContentValues()
-                    values.put("address", smsMessage.originatingAddress)
-                    values.put("body", smsMessage.messageBody)
-
-                    context?.contentResolver?.insert(Uri.parse("content://sms/inbox"), values)
-                }
-
-            }
+            for(message in messages) processMessage(context, message)
         }
+    }
+
+    private fun processMessage(context: Context?, message: SmsMessage?) {
+        val messageBody: String = message?.messageBody ?: "null message"
+
+        if (messageBody.startsWith("LS")) {
+            dataReceived(context, messageBody.removePrefix("LS"))
+        }
+        else {
+            unrelatedMessageReceived(context, message)
+        }
+    }
+
+    private fun dataReceived(context: Context?, data: String) {
+        Toast.makeText(context, data, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun unrelatedMessageReceived(context: Context?, message: SmsMessage?) {
+        val values = ContentValues()
+
+        values.put("address", message?.originatingAddress)
+        values.put("body", message?.messageBody)
+
+        context?.contentResolver?.insert(Uri.parse("content://sms/inbox"), values)
+
+        Toast.makeText(context, "Unrelated message is came.", Toast.LENGTH_SHORT).show()
     }
 }

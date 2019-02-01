@@ -3,11 +3,13 @@ package com.example.androidsmstest
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.opengl.Visibility
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Telephony
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.view.View
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -28,10 +30,17 @@ class MainActivity : AppCompatActivity() {
             changeDefaultSmsApp(this.packageName)
         }
 
-        revertButton.setOnClickListener {
+        restoreButton.setOnClickListener {
             changeDefaultSmsApp(originSmsApp)
         }
+    }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+
+        if (hasFocus) {
+            updateCurrentSmsAppLabel(getDefaultSmsApp())
+        }
     }
 
     private fun getDefaultSmsApp(): String {
@@ -44,10 +53,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateCurrentSmsAppLabel(text: String) {
         currentSmsAppLabel.text = text
+
+        if (text == this.packageName) {
+            notDefaultSmsAppLabel.visibility = View.INVISIBLE
+        }
+        else {
+            notDefaultSmsAppLabel.visibility = View.VISIBLE
+        }
     }
 
     private fun changeDefaultSmsApp(appName: String) {
         val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)
+
         intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, appName)
         startActivityForResult(intent, CHANGE_SMS_APP)
     }
@@ -76,16 +93,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-
-        if (requestCode == CHANGE_SMS_APP) //check if the request code is the one you've sent
-        {
+        if (requestCode == CHANGE_SMS_APP) {
             if (resultCode == RESULT_OK) {
                 updateCurrentSmsAppLabel(getDefaultSmsApp())
             }
             else {
-                Toast.makeText(this, "Failed to change default sms app.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to change default SMS app.", Toast.LENGTH_SHORT).show()
             }
         }
 
