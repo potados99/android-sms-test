@@ -1,5 +1,6 @@
 package com.example.androidsmstest
 
+import android.app.Notification
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -7,6 +8,8 @@ import android.net.Uri
 import android.provider.Telephony
 import android.widget.Toast
 import android.content.ContentValues
+import android.support.v4.app.NotificationCompat
+import android.support.v4.app.NotificationManagerCompat
 import android.telephony.SmsMessage
 
 
@@ -38,12 +41,24 @@ class SmsReceiver : BroadcastReceiver() {
 
     private fun unrelatedMessageReceived(context: Context?, message: SmsMessage?) {
         val values = ContentValues()
+        val address = message?.originatingAddress
+        val body = message?.messageBody
 
-        values.put("address", message?.originatingAddress)
-        values.put("body", message?.messageBody)
+        values.put("address", address)
+        values.put("body", body)
 
         context?.contentResolver?.insert(Uri.parse("content://sms/inbox"), values)
 
-        Toast.makeText(context, "Unrelated message is came.", Toast.LENGTH_SHORT).show()
+        var mBuilder = NotificationCompat.Builder(context!!, "myChannel")
+            .setSmallIcon(R.drawable.notification_icon_background)
+            .setContentTitle(address)
+            .setContentText(body)
+            .setTicker("($address): $body")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setDefaults(Notification.DEFAULT_ALL)
+
+        with(NotificationManagerCompat.from(context)) {
+            notify(0, mBuilder.build())
+        }
     }
 }
