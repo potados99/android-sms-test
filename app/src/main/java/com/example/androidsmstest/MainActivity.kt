@@ -24,7 +24,6 @@ class MainActivity : AppCompatActivity() {
         updateCurrentSmsAppLabel(originSmsApp) // original sms app.
         updateOriginSmsAppLabel(originSmsApp)
 
-
         changeButton.setOnClickListener {
             changeDefaultSmsApp(this.packageName)
         }
@@ -56,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private fun getPermissions() {
         requirePermission(Manifest.permission.RECEIVE_SMS)
         requirePermission(Manifest.permission.READ_SMS)
+        requirePermission(Manifest.permission.BROADCAST_SMS)
         requirePermission(Manifest.permission.SEND_SMS)
         requirePermission(Manifest.permission.READ_CONTACTS)
     }

@@ -3,14 +3,17 @@ package com.example.androidsmstest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.provider.Telephony
 import android.widget.Toast
+import android.content.ContentValues
+
 
 class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent == null) {
             println("SmsReceiver.onReceive")
-            println("context = [${context}], intent = [${intent}]")
+            println("context = [$context], intent = [$intent]")
             println("intent is null")
 
             return // Do not throw!
@@ -23,15 +26,17 @@ class SmsReceiver : BroadcastReceiver() {
                 val messageBody: String = smsMessage.messageBody
 
                 if (messageBody.startsWith("LS")) {
-                    this.abortBroadcast()
-
                     val payload = messageBody.removePrefix("LS")
                     Toast.makeText(context, payload, Toast.LENGTH_SHORT).show()
                 }
                 else {
-                    // save to database.
-                    // context.contentResolver.
+                    val values = ContentValues()
+                    values.put("address", smsMessage.originatingAddress)
+                    values.put("body", smsMessage.messageBody)
+
+                    context?.contentResolver?.insert(Uri.parse("content://sms/inbox"), values)
                 }
+
             }
         }
     }

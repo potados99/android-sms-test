@@ -22,7 +22,7 @@
             android:text="Original SMS App:"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" android:textSize="24sp"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/tertiary_text_light"
             app:layout_constraintVertical_bias="0.286"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.497"/>
@@ -32,7 +32,7 @@
             android:text="@string/smsAppLabelFallback"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" android:id="@+id/currentSmsAppLabel" android:textSize="24sp"
-            android:textColor="@android:color/black" app:layout_constraintVertical_bias="0.519"
+            android:textColor="@android:color/black" app:layout_constraintVertical_bias="0.539"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
     <TextView
@@ -41,22 +41,22 @@
             android:text="Current SMS App:"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent" android:textSize="24sp"
-            android:textColor="@android:color/black"
-            app:layout_constraintVertical_bias="0.466"
+            android:textColor="@android:color/tertiary_text_light"
+            app:layout_constraintVertical_bias="0.486"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
     <Button
             android:text="Change"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/changeButton" android:layout_marginEnd="100dp" app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="176dp"/>
+            android:id="@+id/changeButton" android:layout_marginEnd="96dp" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="144dp"/>
     <Button
             android:text="Revert"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/revertButton" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="100dp"
-            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="176dp"/>
+            android:layout_marginStart="96dp"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="144dp"/>
 
 </android.support.constraint.ConstraintLayout>
