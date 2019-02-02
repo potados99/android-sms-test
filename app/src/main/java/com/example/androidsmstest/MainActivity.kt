@@ -3,28 +3,59 @@ package com.example.androidsmstest
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.opengl.Visibility
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Telephony
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
-    private val CHANGE_SMS_APP = 1
 
+const val CHANGE_SMS_APP = 1
+const val SYSTEM_DEFAULT_SMS_APP = "com.android.mms"
+
+class MainActivity : AppCompatActivity() {
+
+    /**
+     * ViewModel
+     */
+    private var currentSmsApp: String
+    get() {
+        return Telephony.Sms.getDefaultSmsPackage(this)
+    }
+    set(value) {
+        changeDefaultSmsApp(value)
+    }
+
+    private var isDefaultApp: Boolean = false
+    get() {
+        return (currentSmsApp == this.packageName)
+    }
+
+    private lateinit var originSmsApp: String
+
+
+    /**
+     * Business logic
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         getPermissions()
 
-        var originSmsApp = getDefaultSmsApp()
-        updateCurrentSmsAppLabel(originSmsApp) // original sms app.
-        updateOriginSmsAppLabel(originSmsApp)
+        originSmsApp = currentSmsApp
+        var originLabelText = originSmsApp
+
+        if (isDefaultApp) {
+            originSmsApp = SYSTEM_DEFAULT_SMS_APP
+            originLabelText = "$originSmsApp (default)"
+        }
+
+        updateOriginSmsAppLabel(originLabelText)
+        updateCurrentSmsAppLabel()
 
         changeButton.setOnClickListener {
             changeDefaultSmsApp(this.packageName)
@@ -35,31 +66,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+
+        if (isDefaultApp) {
+            val alertText = "Please return and restore SMS app!"
+            Toast.makeText(this, alertText, Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
 
         if (hasFocus) {
-            updateCurrentSmsAppLabel(getDefaultSmsApp())
+            updateCurrentSmsAppLabel()
         }
     }
 
-    private fun getDefaultSmsApp(): String {
-        return Telephony.Sms.getDefaultSmsPackage(this)
-    }
-
-    private fun updateOriginSmsAppLabel(text: String) {
-        originalSmsAppLabel.text = text
-    }
-
-    private fun updateCurrentSmsAppLabel(text: String) {
-        currentSmsAppLabel.text = text
-
-        if (text == this.packageName) {
-            notDefaultSmsAppLabel.visibility = View.INVISIBLE
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == CHANGE_SMS_APP) {
+            if (resultCode == RESULT_OK) {
+                updateCurrentSmsAppLabel()
+            }
+            else {
+                val failMessage = "Failed to change default SMS app."
+                Toast.makeText(this, failMessage, Toast.LENGTH_SHORT).show()
+            }
         }
-        else {
-            notDefaultSmsAppLabel.visibility = View.VISIBLE
-        }
+
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun changeDefaultSmsApp(appName: String) {
@@ -78,31 +113,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requirePermission(permission: String) {
-        val permissionCheck: Int = ContextCompat.checkSelfPermission(this@MainActivity, permission)
+        val permissionCheck = ContextCompat.checkSelfPermission(this@MainActivity, permission)
         val granted = (permissionCheck == PackageManager.PERMISSION_GRANTED)
+        val userDenied = ActivityCompat.shouldShowRequestPermissionRationale(this, permission)
 
         if (! granted) {
-            // if user denied permission.
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                // Hey please give me permission :(
-                Toast.makeText(this@MainActivity, "Please allow access to $permission", Toast.LENGTH_SHORT).show()
+            if (userDenied) {
+                val permissionBagging = "Please allow access to $permission"
+                Toast.makeText(this@MainActivity, permissionBagging, Toast.LENGTH_SHORT).show()
             }
 
-            // request.
             ActivityCompat.requestPermissions(this, arrayOf(permission), 1)
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == CHANGE_SMS_APP) {
-            if (resultCode == RESULT_OK) {
-                updateCurrentSmsAppLabel(getDefaultSmsApp())
-            }
-            else {
-                Toast.makeText(this, "Failed to change default SMS app.", Toast.LENGTH_SHORT).show()
-            }
-        }
 
-        super.onActivityResult(requestCode, resultCode, data)
+    /**
+     * UI control
+     */
+    private fun updateOriginSmsAppLabel(text: String) {
+        originalSmsAppLabel.text = text
+    }
+
+    private fun updateCurrentSmsAppLabel() {
+        currentSmsAppLabel.text = currentSmsApp
+
+        if (isDefaultApp) {
+            notDefaultSmsAppLabel.visibility = View.INVISIBLE
+        }
+        else {
+            notDefaultSmsAppLabel.visibility = View.VISIBLE
+        }
     }
 }
