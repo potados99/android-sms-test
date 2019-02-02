@@ -13,10 +13,12 @@ import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 
 
-const val CHANGE_SMS_APP = 1
-const val SYSTEM_DEFAULT_SMS_APP = "com.android.mms"
-
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        const val CHANGE_SMS_APP = 1
+        const val SYSTEM_DEFAULT_SMS_APP = "com.android.mms"
+    }
 
     /**
      * ViewModel
