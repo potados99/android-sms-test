@@ -1,14 +1,18 @@
 package com.example.androidsmstest
 
 import android.Manifest
-import android.content.Intent
+import android.content.*
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Telephony
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.widget.ListAdapter
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -17,7 +21,16 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val CHANGE_SMS_APP = 1
+        const val SHOW_ON_MAP = 2
         const val SYSTEM_DEFAULT_SMS_APP = "com.android.mms"
+    }
+
+    var receiver = object: BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            showOnMap(intent?.getStringExtra("latitude"),
+                intent?.getStringExtra("longitude"),
+                14)
+        }
     }
 
     /**
@@ -40,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
 
     /**
-     * Business logic
+     * logic
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,8 +77,35 @@ class MainActivity : AppCompatActivity() {
         }
 
         restoreButton.setOnClickListener {
+            var installed = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS)
+
+            var ml = mutableListOf<PackageInfo>()
+
+            for (item in installed) {
+                var has_SEND_SMS = (PackageManager.PERMISSION_GRANTED ==
+                        packageManager.checkPermission(
+                            Manifest.permission.SEND_SMS,
+                            item.packageName))
+                var has_RECEIVE_SMS = (PackageManager.PERMISSION_GRANTED ==
+                        packageManager.checkPermission(
+                            Manifest.permission.RECEIVE_SMS,
+                            item.packageName))
+                var has_BROADCAST_SMS = (PackageManager.PERMISSION_GRANTED ==
+                        packageManager.checkPermission(
+                            Manifest.permission.BROADCAST_SMS,
+                            item.packageName))
+
+                if (has_RECEIVE_SMS && has_SEND_SMS) {
+                    ml.add(item)
+                }
+            }
+
             changeDefaultSmsApp(originSmsApp)
+
+            showSelectionDialog(ml)
         }
+
+        registerReceiver(receiver, IntentFilter("LOCATION_INFO_ARRIVED"));
     }
 
     override fun onStop() {
@@ -75,6 +115,11 @@ class MainActivity : AppCompatActivity() {
             val alertText = "Please return and restore SMS app!"
             Toast.makeText(this, alertText, Toast.LENGTH_LONG).show()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(receiver)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -146,5 +191,46 @@ class MainActivity : AppCompatActivity() {
         else {
             notDefaultSmsAppLabel.visibility = View.VISIBLE
         }
+    }
+
+    private fun showSelectionDialog(list: List<PackageInfo>) {
+        var builder =  AlertDialog.Builder(this)
+
+        var ml = mutableListOf<CharSequence>()
+
+        for (item in list) {
+            ml.add(item.packageName)
+        }
+
+        var array = ml.toTypedArray()
+
+        builder.setTitle("Select app")
+            .setSingleChoiceItems(array, 1)
+            {dialog: DialogInterface, which: Int ->
+                Toast.makeText(this, "You selected!", Toast.LENGTH_SHORT).show()
+            }
+
+            .setPositiveButton("Ok")
+            {dialog: DialogInterface, id: Int ->
+                Toast.makeText(this, "OK!", Toast.LENGTH_SHORT).show()
+
+            }
+            .setNegativeButton("Cancel") {
+                    dialog: DialogInterface, id: Int ->
+                Toast.makeText(this, "No!", Toast.LENGTH_SHORT).show()
+            }
+
+        builder.create().show()
+    }
+
+
+    /**
+     * Util
+     */
+    private fun showOnMap(latitude: String?, longitude: String?, zoom: Int) {
+        val location = Uri.parse("geo:$latitude,$longitude?z=$zoom")
+        val mapIntent = Intent(Intent.ACTION_VIEW, location)
+
+        startActivityForResult(mapIntent, SHOW_ON_MAP)
     }
 }
