@@ -66,6 +66,11 @@ class MainActivity : AppCompatActivity() {
         restoreButton.setOnClickListener {
             changeDefaultSmsApp(originSmsApp)
         }
+
+        map_button.setOnClickListener {
+
+        }
+
     }
 
     override fun onStop() {
