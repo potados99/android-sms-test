@@ -38,6 +38,12 @@ class SmsReceiver : BroadcastReceiver() {
 
     private fun dataReceived(context: Context, data: String) {
         Toast.makeText(context, data, Toast.LENGTH_SHORT).show()
+
+        Intent().also { intent ->
+            intent.action = "com.example.androidsmstest.MYHMM"
+            intent.putExtra("data", data)
+            context.sendBroadcast(intent)
+        }
     }
 
     private fun unrelatedMessageReceived(context: Context, message: SmsMessage) {

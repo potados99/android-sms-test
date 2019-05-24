@@ -68,7 +68,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         map_button.setOnClickListener {
-
+            if (isDefaultApp) {
+                val intent = Intent(this, MapActivity::class.java)
+                startActivity(intent)
+            }
+            else {
+                Toast.makeText(this, "not a default app! cannot receive message.", Toast.LENGTH_SHORT).show()
+            }
         }
 
     }
